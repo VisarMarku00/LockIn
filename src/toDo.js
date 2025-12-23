@@ -1,12 +1,14 @@
-export default function toDo(title) {
+export default function toDo(title, id) {
   let description;
   let dueDate;
   let priority;
 
+  const addTitle = (titleToAdd) => (title = titleToAdd);
   const addDescription = (descriptionToAdd) => (description = descriptionToAdd);
   const addDueDate = (dueDateToAdd) => (dueDate = dueDateToAdd);
-  const setPriority = () => (priority = !priority);
+  const setPriority = (priorityToSet) => (priority = priorityToSet);
   const getData = () => ({
+    id,
     title,
     description,
     dueDate,
@@ -18,5 +20,6 @@ export default function toDo(title) {
     addDueDate,
     setPriority,
     getData,
+    addTitle,
   };
 }
