@@ -1,0 +1,238 @@
+* {
+  box-sizing: border-box;
+  font-family: "Boldonse", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+}
+
+#title{
+  font-weight: 900;
+  font-style: italic;
+  text-align: left;
+  padding-left: 20px;
+}
+
+/* Grid Layout for Collections */
+#collections {
+  display: grid;
+  grid-template-columns: 1fr; /* Mobile: 1 column */
+  gap: 20px;
+  align-items: start;
+  padding: 0 20px;
+}
+
+@media (min-width: 1024px) {
+  #collections {
+    grid-template-columns: repeat(4, 1fr); /* Desktop: 4 columns */
+  }
+}
+
+.collection-wrapper {
+  position: relative; /* For absolute positioning of delete x */
+  padding: 15px;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 0; /* Minimalist: square corners */
+  background-color: #fff2f2; /* Light red background for differentiation */
+  margin: 0; 
+}
+
+.btn-delete-collection {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  color: #999;
+  line-height: 1;
+  width: 44px; /* Standard touch target width */
+  height: 44px; /* Standard touch target height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  z-index: 10;
+}
+
+.btn-delete-collection:hover {
+  color: #ff4444;
+}
+
+.collection-title {
+  font-size: 1.1rem;
+  margin-top: 0;
+  margin-bottom: 10px;
+  margin-right: 44px; /* Space for X button */
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+.collection-description {
+  font-size: 0.85rem;
+  color: #555;
+  margin-bottom: 15px;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Compact Todo Layout */
+.todo-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; /* Always align actions with the first line (title) */
+  padding: 8px 5px; /* Added 5px horizontal gutter to prevent border clipping */
+  margin: 0;
+  border-bottom: 1px solid #f0f0f0;
+  background-color: transparent;
+  min-height: 44px; /* Ensure row is touch-friendly height */
+}
+
+.todo-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  /* Removed justify-content: center to keep at top */
+}
+
+.todo-title {
+  font-size: 0.8rem;
+  margin: 0;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.todo-date-display {
+  font-size: 0.65rem;
+  color: #777;
+  margin-top: 2px;
+  padding: 4px 0 4px 4px; /* Matches title/desc spacing */
+}
+
+.todo-actions {
+  display: flex;
+  gap: 0;
+  align-items: center;
+  margin-left: 5px;
+}
+
+.date-picker-wrapper {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.todo-due-date {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 5;
+  pointer-events: none; /* Let clicks pass through to the button icon */
+}
+
+.btn-date-trigger, 
+.btn-priority-toggle,
+.btn-delete-todo {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 40px; /* Expanded hit area */
+  height: 40px; /* Expanded hit area */
+  font-size: 0.9rem;
+  opacity: 0.5;
+  transition: opacity 0.2s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-date-trigger:hover, 
+.btn-priority-toggle:hover,
+.btn-delete-todo:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.btn-delete-todo:hover {
+  color: #ff4444;
+}
+
+.btn-priority-toggle.high-priority {
+  color: #d32f2f;
+  opacity: 1;
+}
+
+.collection-title,
+.collection-description,
+.todo-title {
+  display: block;
+  border-radius: 2px;
+  transition: outline 0.2s;
+  padding: 4px 0 4px 4px; /* Added breathing room */
+}
+
+/* Animations */
+@keyframes collectionPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes taskSlideDown {
+  0% {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    max-height: 80px; /* Closer to real height to prevent "jump" at end */
+    transform: translateY(0);
+  }
+}
+
+.anim-collection-pop {
+  animation: collectionPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.anim-task-slide-down {
+  overflow: hidden;
+  animation: taskSlideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: max-height, opacity, transform;
+}
+
+/* Ensure focus looks good */
+.collection-title:focus,
+.collection-description:focus,
+.todo-title:focus {
+  background-color: #fff;
+  cursor: text;
+  outline: 2px solid #5da2d5; /* Keep our harmonic blue */
+}
+
+.todo-title:hover {
+  background-color: #f5f5f5;
+  cursor: text;
+}
+
+
+/* Placeholders for contentEditable */
+[contenteditable]:empty::before {
+  content: attr(placeholder);
+  color: #888; /* Darker color for better legibility against light red bg */
+  font-style: italic;
+  display: block;
+}
