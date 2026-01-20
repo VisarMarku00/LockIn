@@ -5,5 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
   </head>
-  <body></body>
+  <body>
+    <header id="title"><h1>LockIn</h1></header>
+    <main id="collections"></main>
+    <template id="collection-box">
+      <div class="collection-wrapper">
+        <button class="btn-delete-collection">×</button>
+        <h2 class="collection-title"></h2>
+        <p class="collection-description"></p>
+        <div class="todo-container"></div>
+      </div>
+    </template>
+    <template id="todo-box">
+      <div class="todo-wrapper">
+        <div class="todo-content">
+          <h3 class="todo-title"></h3>
+          <span class="todo-date-display"></span>
+        </div>
+        <div class="todo-actions">
+          <div class="date-picker-wrapper">
+            <button class="btn-date-trigger">📅</button>
+            <input type="date" class="todo-due-date">
+          </div>
+          <button class="btn-priority-toggle">☆</button>
+          <button class="btn-delete-todo">×</button>
+        </div>
+      </div>
+    </template>
+    <template id="add-collection-box">
+      <div class="collection-wrapper add-collection-btn">
+        <h2 class="collection-title">Add New Collection</h2>
+      </div>
+    </template>
+
+  </body>
 </html>

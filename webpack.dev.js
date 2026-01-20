@@ -15,6 +15,7 @@ module.exports = merge(common, {
     static: path.resolve(__dirname, "dist"),
     open: true,
     hot: true,
+    port: 8080,
   },
 
   module: {

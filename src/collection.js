@@ -1,5 +1,5 @@
-export default function collection(title, id) {
-  let description;
+export default function collection(title, id, createdAt = Date.now()) {
+  let description = "";
   let toDos = [];
 
   const addTitle = (titleToAdd) => (title = titleToAdd);
@@ -15,10 +15,18 @@ export default function collection(title, id) {
     toDos = [];
   };
   const getData = () => {
-    id, title, description, toDos;
+    return {
+      id,
+      title,
+      description,
+      createdAt,
+      toDos: toDos.map((todo) => todo.getData()),
+    };
   };
 
   return {
+    id,
+    createdAt,
     addTitle,
     addDescription,
     addToDo,

@@ -2,98 +2,152 @@ import toDo from "./toDo.js";
 import collection from "./collection.js";
 import { v4 as uuidv4 } from "uuid";
 
-function getCollection(collectionId) {
-  let collectionToGet = getItemFromStorage(collectionId);
-  return restoreCollection(collectionToGet);
+const STORAGE_KEY = "lockin_collections_master";
+
+/* =======================
+   COLLECTIONS
+======================= */
+
+export function getCollection(collectionId) {
+  const all = getAllCollectionsRaw();
+  const data = all.find(c => c.id === collectionId);
+  if (!data) return null;
+  return inflateCollection(data);
 }
 
-function getAllCollections() {
-  let allCollections = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    let id = localStorage.key(i);
-    let currentCollection = localStorage.getItem(id);
-    currentCollection = restoreCollection(currentCollection);
-    allCollections.push(currentCollection);
+export function getAllCollections() {
+  const all = getAllCollectionsRaw();
+  const inflated = all.map(data => inflateCollection(data));
+  // Sort by createdAt to ensure chronological order
+  inflated.sort((a, b) => a.getData().createdAt - b.getData().createdAt);
+  return inflated;
+}
+
+function getAllCollectionsRaw() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error("Storage retrieval error:", e);
+    return [];
   }
-  return allCollections;
 }
 
-function createCollection(collectionBody) {
-  let id = uuidv4();
-  let newColleciion = collection(title, id);
-  newColleciion.addDescription(collectionBody.description);
-  newColleciion.addToDos(collectionBody.toDos);
-
-  saveTolocalStorage(newColleciion);
-  return newColleciion;
+function persistAllCollections(collectionsRaw) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(collectionsRaw));
+  } catch (e) {
+    console.error("Storage save error:", e);
+  }
 }
 
-function editCollection(collectionId, editBody) {
-  let collectionToEdit = restoreCollection(collectionId);
-  collectionToEdit.addDescription(editBody.description);
-  collectionToEdit.addTitle(editBody.title);
-  collectionToEdit.addToDos(editBody.toDos);
-  saveTolocalStorage(collectionToEdit);
-  return collectionToEdit;
+export function createCollection(collectionBody) {
+  const id = uuidv4();
+  const newCollection = collection(collectionBody.title, id);
+
+  newCollection.addDescription(collectionBody.description || "");
+  if (Array.isArray(collectionBody.toDos)) {
+    collectionBody.toDos.forEach((todo) => {
+      const recreatedToDo = toDo(todo.title, uuidv4());
+      recreatedToDo.addDueDate(todo.dueDate);
+      recreatedToDo.setPriority(todo.priority);
+      newCollection.addToDo(recreatedToDo);
+    });
+  }
+
+  saveToLocalStorage(newCollection);
+  return newCollection;
 }
 
-function deleteCollection(id) {
-  localStorage.removeItem(id);
+export function editCollection(collectionId, editBody) {
+  const col = getCollection(collectionId);
+  if (!col) return null;
+
+  if (editBody.title !== undefined) col.addTitle(editBody.title);
+  if (editBody.description !== undefined) col.addDescription(editBody.description);
+
+  saveToLocalStorage(col);
+  return col;
 }
 
-function restoreCollection(id) {
-  let collectionFromMemory = getItemFromStorage(id);
-  let recreatedCollection = collection(collectionFromMemory.title, id);
-  recreatedCollection.addDescription(collectionFromMemory.description);
+export function deleteCollection(id) {
+  const all = getAllCollectionsRaw();
+  const filtered = all.filter(c => c.id !== id);
+  persistAllCollections(filtered);
+}
 
-  collectionFromMemory.toDos.forEach((todoData) => {
-    let recreatedToDo = toDo(todoData.title, todoData.id);
-    recreatedToDo.addDescription(todoData.description);
-    recreatedToDo.addDueDate(todoData.dueDate);
-    recreatedToDo.setPriority(todoData.priority);
+/* =======================
+   TODOS
+======================= */
 
+export function createTodo(collectionId, toDoBody) {
+  const newToDo = toDo(toDoBody.title, uuidv4());
+  newToDo.addDueDate(toDoBody.dueDate || null);
+  newToDo.setPriority(toDoBody.priority || "false");
+
+  addToCollection(newToDo, collectionId);
+  return newToDo;
+}
+
+export function addToCollection(newToDo, collectionId) {
+  const col = getCollection(collectionId);
+  if (!col) return null;
+
+  col.addToDo(newToDo);
+  saveToLocalStorage(col);
+}
+
+export function deleteToDo(collectionId, toDoId) {
+  const col = getCollection(collectionId);
+  if (!col) return;
+
+  col.deleteToDo(toDoId);
+  saveToLocalStorage(col);
+}
+
+export function editToDo(collectionId, toDoId, editBody) {
+  const col = getCollection(collectionId);
+  if (!col) return null;
+
+  const t = col.getToDo(toDoId);
+  if (!t) return null;
+
+  if (editBody.title !== undefined) t.addTitle(editBody.title);
+  if (editBody.dueDate !== undefined) t.addDueDate(editBody.dueDate);
+  if (editBody.priority !== undefined) t.setPriority(editBody.priority);
+
+  saveToLocalStorage(col);
+  return t;
+}
+
+/* =======================
+   STORAGE HELPERS
+======================= */
+
+function inflateCollection(data) {
+  const recreatedCollection = collection(data.title, data.id, data.createdAt);
+  recreatedCollection.addDescription(data.description || "");
+
+  data.toDos.forEach((todoData) => {
+    const recreatedToDo = toDo(todoData.title, todoData.id);
+    recreatedToDo.addDueDate(todoData.dueDate || null);
+    recreatedToDo.setPriority(todoData.priority || "false");
     recreatedCollection.addToDo(recreatedToDo);
   });
 
-  return collectionFromMemory;
+  return recreatedCollection;
 }
 
-function createTodo(toDoBody, collectionId) {
-  let newToDo = toDo(title, uuidv4());
-  newToDo.addDescription(toDoBody.description);
-  newToDo.addDueDate(toDoBody.dueDate);
-  newToDo.setPriority(toDoBody.setPriority);
+export function saveToLocalStorage(colInstance) {
+  const all = getAllCollectionsRaw();
+  const colData = colInstance.getData();
+  const index = all.findIndex(c => c.id === colData.id);
 
-  addToCollection(newToDo, collectionId);
-}
+  if (index !== -1) {
+    all[index] = colData;
+  } else {
+    all.push(colData);
+  }
 
-function addToCollection(newToDo, collectionId) {
-  let parentCollection = restoreCollection(collectionId);
-  parentCollection.addToDo(newToDo);
-  saveTolocalStorage(parentCollection);
-}
-
-function deleteToDo(collectionId, toDoId) {
-  let currentCollection = restoreCollection(collectionId);
-  currentCollection.deleteToDo(toDoId);
-  saveTolocalStorage(currentCollection);
-}
-
-function editToDo(collectionId, toDoId, editBody) {
-  let currentCollection = restoreCollection(collectionId);
-  let toDoToEdit = currentCollection.getToDo(toDoId);
-  toDoToEdit.addTitle(editBody.title);
-  toDoToEdit.addDescription(editBody.description);
-  toDoToEdit.addDueDate(editBody.dueDate);
-  toDoToEdit.setPriority(editBody.priority);
-
-  saveTolocalStorage(currentCollection);
-}
-
-function getItemFromStorage(id) {
-  return JSON.parse(localStorage.getItem(id));
-}
-
-function saveTolocalStorage(collection) {
-  localStorage.setItem(collection.id, collection);
+  persistAllCollections(all);
 }
